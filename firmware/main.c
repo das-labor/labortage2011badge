@@ -30,10 +30,7 @@ different port or bit, change the macros below:
 #include <util/delay.h>     /* for _delay_ms() */
 
 #include <avr/pgmspace.h>   /* required by usbdrv.h */
-extern "C"
-{
-	#include "usbdrv.h"
-}
+#include "usbdrv.h"
 #include "oddebug.h"        /* This is also an example for using debug macros */
 #include "requests.h"       /* The custom request numbers we use */
 
@@ -41,7 +38,7 @@ extern "C"
 /* ----------------------------- USB interface ----------------------------- */
 /* ------------------------------------------------------------------------- */
 
-PROGMEM char usbHidReportDescriptor[22] = {    /* USB report descriptor */
+char usbHidReportDescriptor[22] PROGMEM = {    /* USB report descriptor */
     0x06, 0x00, 0xff,              // USAGE_PAGE (Generic Desktop)
     0x09, 0x01,                    // USAGE (Vendor Usage 1)
     0xa1, 0x01,                    // COLLECTION (Application)
@@ -68,7 +65,7 @@ static uint8_t bb = 0;
 
 /* ------------------------------------------------------------------------- */
 
-extern "C" usbMsgLen_t usbFunctionSetup(uchar data[8])
+usbMsgLen_t usbFunctionSetup(uchar data[8])
 {
 	usbRequest_t    *rq = (usbRequest_t *)data;
 
@@ -128,7 +125,7 @@ int         x, optimumDev, targetValue = (unsigned)(1499 * (double)F_CPU / 10.5e
 }
  
 
-extern "C" void usbEventResetReady(void)
+void usbEventResetReady(void)
 {
     cli();  // usbMeasureFrameLength() counts CPU cycles, so disable interrupts.
     calibrateOscillator();
