@@ -96,3 +96,4 @@ check_blue:
 blue_off:
 	sbi _SFR_IO_ADDR(PORTB), BLUE_BIT
 	ret
+
