@@ -20,7 +20,6 @@
 #ifndef HEXDUMP_H_
 #define HEXDUMP_H_
 
-
-void hexdump_block(FILE* stream, void* block, unsigned length, unsigned width);
+void hexdump_block(FILE* stream, void* block, void* print_addr, unsigned length, unsigned width);
 
 #endif /* HEXDUMP_H_ */

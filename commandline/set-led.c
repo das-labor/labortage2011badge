@@ -93,7 +93,7 @@ void read_mem(char* param){
 		}
 
 	}else{
-		hexdump_block(stdout, buffer, length, 8);
+		hexdump_block(stdout, buffer, addr, length, 8);
 	}
 }
 
@@ -123,7 +123,7 @@ void write_mem(char* param){
 		exit(1);
 	}
 	memset(buffer, (uint8_t)pad, length);
-	if(!data && !f){
+	if(!data && !f && length==0){
 		fprintf(stderr, "ERROR: no data to write\n");
 		exit(1);
 	}
@@ -133,7 +133,7 @@ void write_mem(char* param){
 		if(cnt!=length && pad==-1){
 			fprintf(stderr, "Warning: could ony read %d bytes from file; will only write these bytes", cnt);
 		}
-	}else{
+	}else if(data){
 		char xbuffer[3]= {0, 0, 0};
 		uint8_t fill=0;
 		unsigned idx=0;
