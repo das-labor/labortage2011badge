@@ -24,7 +24,7 @@ EXE_SUFFIX =
 
 NAME = set-led
 
-OBJECTS = opendevice.o $(NAME).o
+OBJECTS = opendevice.o hexdump.o $(NAME).o
 
 CC		= gcc
 CFLAGS	= $(CPPFLAGS) $(USBFLAGS) -O -g -Wall
