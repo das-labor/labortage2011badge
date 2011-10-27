@@ -7,11 +7,11 @@
 # License: GNU GPL v2 (see License.txt), GNU GPL v3 or proprietary (CommercialLicense.txt)
 # This Revision: $Id: Makefile 692 2008-11-07 15:07:40Z cs $
 
-DEVICE  = attiny45
+DEVICE  = attiny85 #attiny45
 F_CPU   = 16500000
-FUSE_L  = 0xe1
-FUSE_H  = 0xdd
-AVRDUDE = avrdude -c avrisp2 -P usb -p $(DEVICE) # edit this line for your programmer
+FUSE_L  = 0xe1 # 1110.0001
+FUSE_H  = 0x9d # 1001.1101
+AVRDUDE = avrdude -c jtag2dw -P usb -p $(DEVICE) # edit this line for your programmer
 
 CFLAGS  = -Iusbdrv -I. -DDEBUG_LEVEL=0
 OBJECTS = usbdrv/usbdrv.o usbdrv/usbdrvasm.o usbdrv/oddebug.o main.o
@@ -30,7 +30,7 @@ help:
 
 hex: main.hex
 
-program: flash fuse
+program: flash
 
 # rule for programming fuse bits:
 fuse:

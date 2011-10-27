@@ -18,10 +18,11 @@ different port or bit, change the macros below:
 */
 #define LED_PORT_DDR        DDRB
 #define LED_PORT_OUTPUT     PORTB
-#define R_BIT            1
+#define R_BIT            4
 #define G_BIT            3
-#define B_BIT            4
+#define B_BIT            1
 
+#include <stdint.h>
 
 #include <avr/io.h>
 #include <avr/wdt.h>
@@ -55,15 +56,14 @@ char usbHidReportDescriptor[22] PROGMEM = {    /* USB report descriptor */
  * We don't transfer our data through HID reports, we use custom requests
  * instead.
  */
-static uint8_t count = 0;
-static volatile uint8_t r = 0;
-static volatile uint8_t g = 0;
-static volatile uint8_t b = 0;
-static uint8_t rb = 0;
-static uint8_t gb = 0;
-static uint8_t bb = 0;
+
+static volatile uint16_t r = 0;
+static volatile uint16_t g = 0;
+static volatile uint16_t b = 0;
 
 /* ------------------------------------------------------------------------- */
+
+static uint8_t current_command;
 
 usbMsgLen_t usbFunctionSetup(uchar data[8])
 {
@@ -71,7 +71,8 @@ usbMsgLen_t usbFunctionSetup(uchar data[8])
 
     if((rq->bmRequestType & USBRQ_TYPE_MASK) == USBRQ_TYPE_VENDOR)
 	{
-		switch(rq->bRequest)
+		current_command = rq->bRequest;
+    	switch(rq->bRequest)
 		{
 		case CUSTOM_RQ_SET_RED:
 			r = rq->wValue.bytes[0];
@@ -82,16 +83,35 @@ usbMsgLen_t usbFunctionSetup(uchar data[8])
 		case CUSTOM_RQ_SET_BLUE:
 			b = rq->wValue.bytes[0];
 			break;	
+		case CUSTOM_RQ_SET_RGB:
+			return USB_NO_MSG;
 		}
     }
 	else
 	{
-        /* calss requests USBRQ_HID_GET_REPORT and USBRQ_HID_SET_REPORT are
+        /* calls requests USBRQ_HID_GET_REPORT and USBRQ_HID_SET_REPORT are
          * not implemented since we never call them. The operating system
          * won't call them either because our descriptor defines no meaning.
          */
     }
     return 0;   /* default for not implemented requests: return no data back to host */
+}
+
+uchar usbFunctionWrite(uchar *data, uchar len)
+{
+	switch(current_command){
+	case CUSTOM_RQ_SET_RGB:
+		if(len!=6){
+			return 1;
+		}
+		r = ((data[0]&3) << 8) | data[1];
+		g = ((data[2]&3) << 8) | data[3];
+		b = ((data[4]&3) << 8) | data[5];
+		return 1;
+	default:
+		return 1;
+	}
+	return 0;
 }
 
 static void calibrateOscillator(void)
@@ -130,36 +150,30 @@ void usbEventResetReady(void)
     cli();  // usbMeasureFrameLength() counts CPU cycles, so disable interrupts.
     calibrateOscillator();
     sei();
-    eeprom_write_byte(0, OSCCAL);   // store the calibrated value in EEPROM
+// we never read the value from eeprom so this causes only degradation of eeprom
+//    eeprom_write_byte(0, OSCCAL);   // store the calibrated value in EEPROM
 }
 
 /* ------------------------------------------------------------------------- */
 void update_leds()
 {
-  if (++count == 0) {    
-    rb = r;
-    gb = g;
-    bb = b;
-    // check if switch on r, g and b
-    if (rb > 0) {        
-      PORTB |= (1 << R_BIT);
-    } 
-    if (gb > 0) {
-      PORTB |= (1 << G_BIT);
-    } 
-    if (bb > 0) {
-      PORTB |= (1 << B_BIT);
-    } 
+  static uint16_t count = 0;
+  ++count;
+  count &= (1<<10)-1;
+  if (count >= r) {
+    PORTB |= (1 << R_BIT);
+  }else{
+      PORTB &= ~(1 << R_BIT);
   }
-  // check if switch off r, g and b
-  if (count == rb) {     
-    PORTB &= ~(1 << R_BIT);
+  if (count >= g) {
+    PORTB |= (1 << G_BIT);
+  }else{
+      PORTB &= ~(1 << G_BIT);
   }
-  if (count == gb) {
-    PORTB &= ~(1 << G_BIT);
-  }
-  if (count == bb) {
-    PORTB &= ~(1 << B_BIT);
+  if (count >= b) {
+    PORTB |= (1 << B_BIT);
+  }else{
+      PORTB &= ~(1 << B_BIT);
   }
 }
 
@@ -184,9 +198,7 @@ int main(void)
         _delay_ms(1);
     }
     usbDeviceConnect();
-    LED_PORT_DDR |= _BV(R_BIT);   /* make the LED bit an output */
-    LED_PORT_DDR |= _BV(G_BIT);   /* make the LED bit an output */
-    LED_PORT_DDR |= _BV(B_BIT);   /* make the LED bit an output */
+    LED_PORT_DDR |= _BV(R_BIT) | _BV(G_BIT) | _BV(B_BIT);   /* make the LED bit an output */
 	
     sei();
 

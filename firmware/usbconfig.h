@@ -47,7 +47,7 @@ section at the end of this file).
  * markers every millisecond.]
  */
 #define USB_CFG_CLOCK_KHZ       (F_CPU/1000)
-/* Clock rate of the AVR in MHz. Legal values are 12000, 12800, 15000, 16000,
+/* Clock rate of the AVR in kHz. Legal values are 12000, 12800, 15000, 16000,
  * 16500 and 20000. The 12.8 MHz and 16.5 MHz versions of the code require no
  * crystal, they tolerate +/- 1% deviation from the nominal frequency. All
  * other rates require a precision of 2000 ppm and thus a crystal!
@@ -89,7 +89,7 @@ section at the end of this file).
 /* The above macro defines the startup condition for data toggling on the
  * interrupt/bulk endpoints 1 and 3. Defaults to USBPID_DATA1.
  * Since the token is toggled BEFORE sending any data, the first packet is
- * sent with the oposite value of this configuration!
+ * sent with the opposite value of this configuration!
  */
 #define USB_CFG_IMPLEMENT_HALT          0
 /* Define this to 1 if you also want to implement the ENDPOINT_HALT feature
@@ -119,7 +119,7 @@ section at the end of this file).
  * The value is in milliamperes. [It will be divided by two since USB
  * communicates power requirements in units of 2 mA.]
  */
-#define USB_CFG_IMPLEMENT_FN_WRITE      0
+#define USB_CFG_IMPLEMENT_FN_WRITE      1
 /* Set this to 1 if you want usbFunctionWrite() to be called for control-out
  * transfers. Set it to 0 if you don't need it and want to save a couple of
  * bytes.
