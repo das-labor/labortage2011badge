@@ -80,9 +80,9 @@ int main(int argc, char **argv)
 		int r = atoi(argv[2]);
 		int g = atoi(argv[3]);
 		int b = atoi(argv[4]);
-		((uint16_t*)buffer)[0] = r;
-		((uint16_t*)buffer)[1] = g;
-		((uint16_t*)buffer)[2] = b;
+		((uint16_t*)buffer)[0] = r & ((1<<10)-1);
+		((uint16_t*)buffer)[1] = g & ((1<<10)-1);
+		((uint16_t*)buffer)[2] = b & ((1<<10)-1);
 //		cnt = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT, CUSTOM_RQ_SET_RED, r, 0, buffer, 0, 5000);
 //		cnt = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT, CUSTOM_RQ_SET_GREEN, g, 0, buffer, 0, 5000);
 //		cnt = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT, CUSTOM_RQ_SET_BLUE, b, 0, buffer, 0, 5000);
