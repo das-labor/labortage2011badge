@@ -35,6 +35,8 @@ different port or bit, change the macros below:
 #include "oddebug.h"        /* This is also an example for using debug macros */
 #include "requests.h"       /* The custom request numbers we use */
 
+uint16_t reverse10(uint16_t);
+
 /* ------------------------------------------------------------------------- */
 /* ----------------------------- USB interface ----------------------------- */
 /* ------------------------------------------------------------------------- */
@@ -158,19 +160,19 @@ void usbEventResetReady(void)
 void update_leds()
 {
   static uint16_t count = 0;
-  ++count;
-  count &= (1<<10)-1;
-  if (count >= r) {
+  uint16_t x;
+  x = reverse10(++count);
+  if (x >= r) {
     PORTB |= (1 << R_BIT);
   }else{
       PORTB &= ~(1 << R_BIT);
   }
-  if (count >= g) {
+  if (x >= g) {
     PORTB |= (1 << G_BIT);
   }else{
       PORTB &= ~(1 << G_BIT);
   }
-  if (count >= b) {
+  if (x >= b) {
     PORTB |= (1 << B_BIT);
   }else{
       PORTB &= ~(1 << B_BIT);
