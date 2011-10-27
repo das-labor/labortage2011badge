@@ -33,7 +33,7 @@ static void usage(char *name)
     fprintf(stderr, "usage:\n");
     fprintf(stderr, "  %s rgb <r> <b> <g> ....... set LED color\n", name);
 //    fprintf(stderr, "  %s off ...... turn off LED\n", name);
-//    fprintf(stderr, "  %s status ... ask current status of LED\n", name);
+    fprintf(stderr, "  %s status ................ ask current status of LED\n", name);
 #if ENABLE_TEST
     fprintf(stderr, "  %s test ..... run driver reliability test\n", name);
 #endif /* ENABLE_TEST */
@@ -63,26 +63,26 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    /*if(strcasecmp(argv[1], "status") == 0){
-        cnt = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, CUSTOM_RQ_GET_STATUS, 0, 0, buffer, sizeof(buffer), 5000);
-        if(cnt < 1){
+    if(strcasecmp(argv[1], "status") == 0){
+        cnt = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, CUSTOM_RQ_GET_RGB, 0, 0, buffer, 6, 5000);
+        if(cnt < 6){
             if(cnt < 0){
                 fprintf(stderr, "USB error: %s\n", usb_strerror());
             }else{
                 fprintf(stderr, "only %d bytes received.\n", cnt);
             }
         }else{
-            printf("LED is %s\n", buffer[0] ? "on" : "off");
+            printf("LED color is %hu %hu %hu\n", ((uint16_t*)buffer)[0], ((uint16_t*)buffer)[1], ((uint16_t*)buffer)[2]);
         }
     }
-    else*/ if(strcasecmp(argv[1], "rgb") == 0)
+    else if(strcasecmp(argv[1], "rgb") == 0)
 	{
 		int r = atoi(argv[2]);
 		int g = atoi(argv[3]);
 		int b = atoi(argv[4]);
-		*((uint16_t*)(&(buffer[0]))) = htons(r);
-		*((uint16_t*)(&(buffer[2]))) = htons(g);
-		*((uint16_t*)(&(buffer[4]))) = htons(b);
+		((uint16_t*)buffer)[0] = r;
+		((uint16_t*)buffer)[1] = g;
+		((uint16_t*)buffer)[2] = b;
 //		cnt = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT, CUSTOM_RQ_SET_RED, r, 0, buffer, 0, 5000);
 //		cnt = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT, CUSTOM_RQ_SET_GREEN, g, 0, buffer, 0, 5000);
 //		cnt = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT, CUSTOM_RQ_SET_BLUE, b, 0, buffer, 0, 5000);

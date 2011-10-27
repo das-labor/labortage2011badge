@@ -20,6 +20,9 @@
 #define CUSTOM_RQ_SET_GREEN   4
 #define CUSTOM_RQ_SET_BLUE    5
 #define CUSTOM_RQ_SET_RGB     6
+#define CUSTOM_RQ_GET_RGB     7
+#define CUSTOM_RQ_GET_ADC     8
+
 
 
 

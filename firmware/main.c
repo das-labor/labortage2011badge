@@ -62,7 +62,7 @@ char usbHidReportDescriptor[22] PROGMEM = {    /* USB report descriptor */
 static volatile uint16_t r = 0;
 static volatile uint16_t g = 0;
 static volatile uint16_t b = 0;
-
+uint8_t tx_buffer[8];
 /* ------------------------------------------------------------------------- */
 
 static uint8_t current_command;
@@ -87,6 +87,17 @@ usbMsgLen_t usbFunctionSetup(uchar data[8])
 			break;	
 		case CUSTOM_RQ_SET_RGB:
 			return USB_NO_MSG;
+		case CUSTOM_RQ_GET_RGB:{
+			usbMsgLen_t len=6;
+			((uint16_t*)tx_buffer)[0] = r;
+			((uint16_t*)tx_buffer)[1] = g;
+			((uint16_t*)tx_buffer)[2] = b;
+			if(len>rq->wLength.word){
+				len = rq->wLength.word;
+			}
+			usbMsgPtr = tx_buffer;
+			return len;
+		}
 		}
     }
 	else
@@ -106,9 +117,9 @@ uchar usbFunctionWrite(uchar *data, uchar len)
 		if(len!=6){
 			return 1;
 		}
-		r = ((data[0]&3) << 8) | data[1];
-		g = ((data[2]&3) << 8) | data[3];
-		b = ((data[4]&3) << 8) | data[5];
+		r = (((uint16_t*)data)[0]) & (1<<10)-1;
+		g = (((uint16_t*)data)[1]) & (1<<10)-1;
+		b = (((uint16_t*)data)[2]) & (1<<10)-1;
 		return 1;
 	default:
 		return 1;
