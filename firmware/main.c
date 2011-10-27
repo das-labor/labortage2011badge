@@ -23,6 +23,7 @@ different port or bit, change the macros below:
 #define B_BIT            1
 
 #include <stdint.h>
+#include <string.h>
 
 #include <avr/io.h>
 #include <avr/wdt.h>
@@ -36,6 +37,7 @@ different port or bit, change the macros below:
 #include "requests.h"       /* The custom request numbers we use */
 
 uint16_t reverse10(uint16_t);
+void update_pwm(void);
 
 /* ------------------------------------------------------------------------- */
 /* ----------------------------- USB interface ----------------------------- */
@@ -59,10 +61,16 @@ char usbHidReportDescriptor[22] PROGMEM = {    /* USB report descriptor */
  * instead.
  */
 
-static volatile uint16_t r = 0;
-static volatile uint16_t g = 0;
-static volatile uint16_t b = 0;
-uint8_t tx_buffer[8];
+union {
+	struct {
+		uint16_t red;
+		uint16_t green;
+		uint16_t blue;
+	} name;
+	uint16_t idx[3];
+} color;
+
+static uint8_t tx_buffer[8];
 /* ------------------------------------------------------------------------- */
 
 static uint8_t current_command;
@@ -77,25 +85,22 @@ usbMsgLen_t usbFunctionSetup(uchar data[8])
     	switch(rq->bRequest)
 		{
 		case CUSTOM_RQ_SET_RED:
-			r = rq->wValue.bytes[0];
+			color.name.red = rq->wValue.bytes[0];
 			break;	
 		case CUSTOM_RQ_SET_GREEN:
-			g = rq->wValue.bytes[0];
+			color.name.green = rq->wValue.bytes[0];
 			break;	
 		case CUSTOM_RQ_SET_BLUE:
-			b = rq->wValue.bytes[0];
+			color.name.blue = rq->wValue.bytes[0];
 			break;	
 		case CUSTOM_RQ_SET_RGB:
 			return USB_NO_MSG;
 		case CUSTOM_RQ_GET_RGB:{
 			usbMsgLen_t len=6;
-			((uint16_t*)tx_buffer)[0] = r;
-			((uint16_t*)tx_buffer)[1] = g;
-			((uint16_t*)tx_buffer)[2] = b;
 			if(len>rq->wLength.word){
 				len = rq->wLength.word;
 			}
-			usbMsgPtr = tx_buffer;
+			usbMsgPtr = (uchar*)color.idx;
 			return len;
 		}
 		}
@@ -117,9 +122,7 @@ uchar usbFunctionWrite(uchar *data, uchar len)
 		if(len!=6){
 			return 1;
 		}
-		r = (((uint16_t*)data)[0]) & (1<<10)-1;
-		g = (((uint16_t*)data)[1]) & (1<<10)-1;
-		b = (((uint16_t*)data)[2]) & (1<<10)-1;
+		memcpy(color.idx, data, 6);
 		return 1;
 	default:
 		return 1;
@@ -168,27 +171,6 @@ void usbEventResetReady(void)
 }
 
 /* ------------------------------------------------------------------------- */
-void update_leds()
-{
-  static uint16_t count = 0;
-  uint16_t x;
-  x = reverse10(++count);
-  if (x >= r) {
-    PORTB |= (1 << R_BIT);
-  }else{
-      PORTB &= ~(1 << R_BIT);
-  }
-  if (x >= g) {
-    PORTB |= (1 << G_BIT);
-  }else{
-      PORTB &= ~(1 << G_BIT);
-  }
-  if (x >= b) {
-    PORTB |= (1 << B_BIT);
-  }else{
-      PORTB &= ~(1 << B_BIT);
-  }
-}
 
 int main(void)
 {
@@ -216,7 +198,7 @@ int main(void)
     sei();
 
     for(;;){                /* main event loop */
-		update_leds();
+		update_pwm();
 		
         wdt_reset();
         usbPoll();
