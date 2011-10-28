@@ -205,6 +205,15 @@ void read_flash(char* param){
 	}
 }
 
+void soft_reset(char* param){
+	unsigned delay=0;
+	if(param){
+		sscanf(param, "%i", &delay);
+	}
+	delay &= 0xf;
+	usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, CUSTOM_RQ_RESET, (int)delay, 0, NULL, 0, 5000);
+}
+
 static struct option long_options[] =
              {
                /* These options set a flag. */
@@ -219,6 +228,7 @@ static struct option long_options[] =
                {"read-flash", required_argument, 0, 'z'},
                {"exec-spm",   required_argument, 0, 'x'},
                {"read-adc",   required_argument, 0, 'a'},
+               {"reset",      optional_argument, 0, 'q'},
                {"file",       required_argument, 0, 'f'},
                {0, 0, 0, 0}
              };
@@ -240,6 +250,7 @@ static void usage(char *name)
 	"    -z --read-flash <addr>:<length> ................... read flash\n"
 	"    -x --exec-spm <addr>:<length>:<Z>:<R0R1>[:data] ... write RAM, set Z pointer, set r0:r1 and execute SPM\n"
 	"    -a --read-adc <adc> ............................... read ADC\n"
+	"    -q --reset ........................................ reset the controller"
 	;
 	fprintf(stderr, usage_str, name);
 }
@@ -271,19 +282,19 @@ int main(int argc, char **argv)
     }
 
     for(;;){
-    	c = getopt_long(argc, argv, "s:gr:z:w:x:a:f:p::",
+    	c = getopt_long(argc, argv, "s:gr:z:w:x:a:f:p::q::",
                 long_options, &option_index);
     	if(c == -1){
     		break;
     	}
 
-    	if(action_fn && strchr("sgrzwxa", c)){
+    	if(action_fn && strchr("sgrzwxaq", c)){
     		/* action given while already having an action */
     		usage(argv[0]);
     		exit(1);
     	}
 
-    	if(strchr("sgrzwxa", c)){
+    	if(strchr("sgrzwxaq", c)){
     		main_arg = optarg;
     	}
 
@@ -293,6 +304,7 @@ int main(int argc, char **argv)
     	case 'r': action_fn = read_mem; break;
     	case 'z': action_fn = read_flash; break;
     	case 'w': action_fn = write_mem; break;
+    	case 'q': action_fn = soft_reset; break;
     	case 'f': fname = optarg; break;
     	case 'p': pad = 0; if(optarg) pad=strtoul(optarg, NULL, 0); break;
     	case 'x':

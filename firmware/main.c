@@ -126,7 +126,9 @@ usbMsgLen_t usbFunctionSetup(uchar data[8])
 			uni_buffer.w16[0] = rq->wValue.word;
 			uni_buffer.w16[1] = rq->wLength.word;
 			return USB_NO_MSG;
-
+		case CUSTOM_RQ_RESET:
+			soft_reset((uint8_t)(rq->wValue.word));
+			break;
 		}
     }
 	else

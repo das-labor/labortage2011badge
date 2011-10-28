@@ -23,5 +23,6 @@
 #include <stdint.h>
 
 void exec_spm(uint16_t z, uint16_t r0r1, void* dest, void* src, uint8_t len);
+void soft_reset(uint8_t delay);
 
 #endif /* SPECIAL_FUNCTIONS_H_ */

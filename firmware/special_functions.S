@@ -50,3 +50,17 @@ spm_cmd:
 	pop r29
 	pop r28
 	ret
+
+.global soft_reset
+soft_reset:
+	andi r24, 0x0F
+	cpi r24, 0x0F
+	breq 1f
+	bld r24, 3
+	bst r24, 5
+	ori r24, 0x08
+	ldi r25, 0x18
+	out _SFR_IO_ADDR(WDTCR), r25
+	out _SFR_IO_ADDR(WDTCR), r24
+1:
+	rjmp 1b
