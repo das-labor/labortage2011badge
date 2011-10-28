@@ -21,6 +21,7 @@ different port or bit, change the macros below:
 #define R_BIT            4
 #define G_BIT            3
 #define B_BIT            1
+#define BUTTON_PIN 4
 
 #include <stdint.h>
 #include <string.h>
@@ -37,7 +38,6 @@ different port or bit, change the macros below:
 #include "requests.h"       /* The custom request numbers we use */
 #include "special_functions.h"
 
-uint16_t reverse10(uint16_t);
 void update_pwm(void);
 
 /* ------------------------------------------------------------------------- */
@@ -80,10 +80,21 @@ static union {
 	void*    ptr[UNI_BUFFER_SIZE/sizeof(void*)];
 } uni_buffer;
 
-uint8_t uni_buffer_fill;
+static uint8_t uni_buffer_fill;
+static uint8_t current_command;
 /* ------------------------------------------------------------------------- */
 
-static uint8_t current_command;
+
+uint8_t read_button(void){
+	uint8_t t,v;
+	t = PORTB;
+	PORTB &= ~(1<<BUTTON_PIN);
+	v = PINB;
+	PORTB = t;
+	v >>= BUTTON_PIN;
+	v &= 1;
+	return v;
+}
 
 usbMsgLen_t usbFunctionSetup(uchar data[8])
 {
@@ -129,6 +140,9 @@ usbMsgLen_t usbFunctionSetup(uchar data[8])
 		case CUSTOM_RQ_RESET:
 			soft_reset((uint8_t)(rq->wValue.word));
 			break;
+		case CUSTOM_RQ_READ_BUTTON:
+			uni_buffer.w8[0] = read_button();
+			return 1;
 		}
     }
 	else

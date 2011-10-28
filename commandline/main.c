@@ -209,12 +209,29 @@ void soft_reset(char* param){
 	unsigned delay=0;
 	if(param){
 		sscanf(param, "%i", &delay);
-	}else{
-		printf("DBG: no param ==> (default) delay = 0\n");
 	}
 	delay &= 0xf;
-	printf("DBG: delay = %d\n", delay);
 	usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, CUSTOM_RQ_RESET, (int)delay, 0, NULL, 0, 5000);
+}
+
+void read_button(char* param){
+	uint8_t v;
+	usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, CUSTOM_RQ_READ_BUTTON, 0, 0, (char*)&v, 1, 5000);
+	printf("button is %s\n",v?"on":"off");
+}
+
+void wait_for_button(char* param){
+	uint8_t v, x;
+	x = 1;
+	if(param){
+		if(!strcmp(param,"off")){
+			x = 0;
+		}
+	}
+	do{
+		usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, CUSTOM_RQ_READ_BUTTON, 0, 0, (char*)&v, 1, 5000);
+	}while(x!=v);
+	printf("button is %s\n",v?"on":"off");
 }
 
 static struct option long_options[] =
@@ -232,6 +249,8 @@ static struct option long_options[] =
                {"exec-spm",   required_argument, 0, 'x'},
                {"read-adc",   required_argument, 0, 'a'},
                {"reset",      optional_argument, 0, 'q'},
+               {"read-button",   required_argument, 0, 'b'},
+               {"wait-for-button",      optional_argument, 0, 'k'},
                {"file",       required_argument, 0, 'f'},
                {0, 0, 0, 0}
              };
@@ -254,6 +273,8 @@ static void usage(char *name)
 /*	"    -x --exec-spm <addr>:<length>:<Z>:<R0R1>[:data] ... write RAM, set Z pointer, set r0:r1 and execute SPM\n"
 	"    -a --read-adc <adc> ............................... read ADC\n" */
 	"    -q --reset[=<delay>] .............................. reset the controller with delay in range 0..9\n"
+	"    -b --read-button .................................. read status of button\n"
+	"    -k --wait-for-button[=(on|off)] ................... wait for button press (default: on)\n"
 	;
 	fprintf(stderr, usage_str, name);
 }
@@ -285,19 +306,19 @@ int main(int argc, char **argv)
     }
 
     for(;;){
-    	c = getopt_long(argc, argv, "s:gr:z:w:x:a:f:p::q::",
+    	c = getopt_long(argc, argv, "s:gr:z:w:x:a:f:p::q::bk::",
                 long_options, &option_index);
     	if(c == -1){
     		break;
     	}
 
-    	if(action_fn && strchr("sgrzwxaq", c)){
+    	if(action_fn && strchr("sgrzwxaqbk", c)){
     		/* action given while already having an action */
     		usage(argv[0]);
     		exit(1);
     	}
 
-    	if(strchr("sgrzwxaq", c)){
+    	if(strchr("sgrzwxaqk", c)){
     		main_arg = optarg;
     	}
 
@@ -308,6 +329,8 @@ int main(int argc, char **argv)
     	case 'z': action_fn = read_flash; break;
     	case 'w': action_fn = write_mem; break;
     	case 'q': action_fn = soft_reset; break;
+    	case 'b': action_fn = read_button; break;
+    	case 'k': action_fn = wait_for_button; break;
     	case 'f': fname = optarg; break;
     	case 'p': pad = 0; if(optarg) pad=strtoul(optarg, NULL, 0); break;
     	case 'x':
