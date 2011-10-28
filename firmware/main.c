@@ -101,6 +101,18 @@ uint8_t read_button(void){
 	return v;
 }
 
+void init_tmpsensor(void){
+	ADMUX = 0x8F;
+	ADCSRA = 0x87;
+}
+
+uint16_t read_tmpsensor(void){
+	ADCSRA |= 0x40;
+	while(ADCSRA & 0x40)
+		;
+	return ADC;
+}
+
 usbMsgLen_t usbFunctionSetup(uchar data[8])
 {
 	usbRequest_t    *rq = (usbRequest_t *)data;
@@ -149,6 +161,10 @@ usbMsgLen_t usbFunctionSetup(uchar data[8])
 			uni_buffer.w8[0] = read_button();
 			usbMsgPtr = uni_buffer.w8;
 			return 1;
+		case CUSTOM_RQ_READ_TMPSENS:
+			uni_buffer.w16[0] = read_tmpsensor();
+			usbMsgPtr = uni_buffer.w8;
+			return 2;
 		}
     }
 	else
@@ -268,6 +284,7 @@ int main(void)
      * additional hardware initialization.
      */
 
+    init_tmpsensor();
     usbInit();
     usbDeviceDisconnect();  /* enforce re-enumeration, do this while interrupts are disabled! */
     i = 0;

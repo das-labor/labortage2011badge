@@ -28,6 +28,7 @@
 #define CUSTOM_RQ_EXEC_SPM     0x13
 #define CUSTOM_RQ_RESET        0x14
 #define CUSTOM_RQ_READ_BUTTON  0x15
+#define CUSTOM_RQ_READ_TMPSENS 0x16
 
 
 

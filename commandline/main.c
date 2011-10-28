@@ -54,7 +54,7 @@ void get_rgb(char* param){
 		fprintf(stderr, "ERROR: received %d bytes from device while expecting %d bytes\n", cnt, 6);
 		exit(1);
 	}
-	printf("red:   %3.3hu\ngreen: %3.3hu\nblue:  %3.3hu\n", buffer[0], buffer[1], buffer[2]);
+	printf("red:   %5hu\ngreen: %5hu\nblue:  %5u\n", buffer[0], buffer[1], buffer[2]);
 }
 
 void read_mem(char* param){
@@ -234,24 +234,34 @@ void wait_for_button(char* param){
 	printf("button is %s\n",v?"on":"off");
 }
 
+void read_temperature(char* param){
+	uint16_t v;
+	int cnt;
+	cnt = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, CUSTOM_RQ_READ_TMPSENS, 0, 0, (char*)&v, 2, 5000);
+	printf("temperature raw value: %hd 0x%hx\n", v, v);
+}
+
+
 static struct option long_options[] =
              {
                /* These options set a flag. */
-               {"i-am-sure", no_argument,       &safety_question_override, 1},
-               {"pad", optional_argument,       0, 'p'},
+               {"i-am-sure",       no_argument, &safety_question_override, 1},
+               {"pad",             optional_argument, 0, 'p'},
                /* These options don't set a flag.
                   We distinguish them by their indices. */
-               {"set-rgb",    required_argument, 0, 's'},
-               {"get-rgb",          no_argument, 0, 'g'},
-               {"read-mem",   required_argument, 0, 'r'},
-               {"write-mem",  required_argument, 0, 'w'},
-               {"read-flash", required_argument, 0, 'z'},
-               {"exec-spm",   required_argument, 0, 'x'},
-               {"read-adc",   required_argument, 0, 'a'},
-               {"reset",      optional_argument, 0, 'q'},
-               {"read-button",   required_argument, 0, 'b'},
-               {"wait-for-button",      optional_argument, 0, 'k'},
-               {"file",       required_argument, 0, 'f'},
+               {"set-rgb",         required_argument, 0, 's'},
+               {"get-rgb",               no_argument, 0, 'g'},
+               {"read-mem",        required_argument, 0, 'r'},
+               {"write-mem",       required_argument, 0, 'w'},
+               {"read-flash",      required_argument, 0, 'z'},
+               {"exec-spm",        required_argument, 0, 'x'},
+               {"read-adc",        required_argument, 0, 'a'},
+               {"reset",           optional_argument, 0, 'q'},
+               {"read-button",     required_argument, 0, 'b'},
+               {"wait-for-button", optional_argument, 0, 'k'},
+               {"read-temperature",      no_argument, 0, 't'},
+               {"file",            required_argument, 0, 'f'},
+               {"loop",            required_argument, 0, 'l'},
                {0, 0, 0, 0}
              };
 
@@ -264,6 +274,7 @@ static void usage(char *name)
 	"    -p --pad[=<pad value>] ............................ pad writing data with <pad value> (default 0) to specified length\n"
 	"    -f --file <name> .................................. use file <name> for reading or writing data\n"
 	"    --i-am-sure ....................................... do not ask safety question\n"
+	"    -l --loop <value> ................................. execute action <value> times\n"
 	"  <command> is one of the following\n"
 	"    -s --set-rgb <red>:<green>:<blue> ................. set color\n"
 	"    -g --get-rgb ...................................... read color from device and print\n"
@@ -275,6 +286,7 @@ static void usage(char *name)
 	"    -q --reset[=<delay>] .............................. reset the controller with delay in range 0..9\n"
 	"    -b --read-button .................................. read status of button\n"
 	"    -k --wait-for-button[=(on|off)] ................... wait for button press (default: on)\n\n"
+	"    -t --read-temperature ............................. read temperature sensor and output raw value\n"
 	" Please note:\n"
 	"   If you use optional parameters you have to use two different way to specify the parameter,\n"
 	"   depending on if you use short or long options.\n"
@@ -295,7 +307,7 @@ int main(int argc, char **argv)
   int  c, option_index;
   void(*action_fn)(char*) = NULL;
   char* main_arg = NULL;
-
+  unsigned exec_loops=(unsigned)-1;
   usb_init();
   if(argc < 2){   /* we need at least one argument */
     usage(argv[0]);
@@ -311,19 +323,19 @@ int main(int argc, char **argv)
     }
 
     for(;;){
-    	c = getopt_long(argc, argv, "s:gr:z:w:x:a:f:p::q::bk::",
+    	c = getopt_long(argc, argv, "s:gr:z:w:x:a:f:p::q::bk::tl:",
                 long_options, &option_index);
     	if(c == -1){
     		break;
     	}
 
-    	if(action_fn && strchr("sgrzwxaqbk", c)){
+    	if(action_fn && strchr("sgrzwxaqbkt", c)){
     		/* action given while already having an action */
     		usage(argv[0]);
     		exit(1);
     	}
 
-    	if(strchr("sgrzwxaqk", c)){
+    	if(strchr("sgrzwxaqkt", c)){
     		main_arg = optarg;
     	}
 
@@ -336,9 +348,11 @@ int main(int argc, char **argv)
     	case 'q': action_fn = soft_reset; break;
     	case 'b': action_fn = read_button; break;
     	case 'k': action_fn = wait_for_button; break;
+    	case 't': action_fn = read_temperature; break;
     	case 'f': fname = optarg; break;
     	case 'p': pad = 0; if(optarg) pad=strtoul(optarg, NULL, 0); break;
-    	case 'x':
+       	case 'l': exec_loops = strtoul(optarg, NULL, 0); break;
+        case 'x':
     	case 'a':
     	default:
     		break;
@@ -350,7 +364,12 @@ int main(int argc, char **argv)
     	fprintf(stderr, "Error: no action specified\n");
     	return 1;
     }else{
-    	action_fn(main_arg);
+    	if(exec_loops==(unsigned)-1){
+    		exec_loops = 1;
+    	}
+    	while(exec_loops--){
+    		action_fn(main_arg);
+    	}
         usb_close(handle);
     	return 0;
     }
