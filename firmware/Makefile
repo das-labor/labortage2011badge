@@ -7,11 +7,13 @@
 # License: GNU GPL v2 (see License.txt), GNU GPL v3 or proprietary (CommercialLicense.txt)
 # This Revision: $Id: Makefile 692 2008-11-07 15:07:40Z cs $
 
-DEVICE  = attiny85 #attiny45
+DEVICE  = attiny45 #attiny45
 F_CPU   = 16500000
-FUSE_L  = 0xe1 # 1110.0001
-FUSE_H  = 0x9d # 1001.1101
-AVRDUDE = avrdude -c jtag2dw -P usb -p $(DEVICE) # edit this line for your programmer
+FUSE_L  = 0xe1# 1110.0001
+FUSE_H  = 0x9d# 1001.1101
+#AVRDUDE = avrdude -c avr910 -P /dev/ttyUSB0 -p $(DEVICE) # edit this line for your programmer
+AVRDUDE_ISP = avrdude -c jtag2isp -P usb -p $(DEVICE) # edit this line for your programmer
+AVRDUDE_DW  = avrdude -c jtag2dw  -P usb -p $(DEVICE) # edit this line for your programmer
 
 CFLAGS  = -Iusbdrv -I. -DDEBUG_LEVEL=0
 OBJECTS = usbdrv/usbdrv.o usbdrv/usbdrvasm.o usbdrv/oddebug.o pwm-x.o main.o \
@@ -33,15 +35,22 @@ hex: main.hex
 
 program: flash
 
+xprog_i: flash_isp fuse
+xprog_d: fuse flash_dw
+
 # rule for programming fuse bits:
 fuse:
 	@[ "$(FUSE_H)" != "" -a "$(FUSE_L)" != "" ] || \
 		{ echo "*** Edit Makefile and choose values for FUSE_L and FUSE_H!"; exit 1; }
-	$(AVRDUDE) -U hfuse:w:$(FUSE_H):m -U lfuse:w:$(FUSE_L):m
+	$(AVRDUDE_ISP) -U hfuse:w:$(FUSE_H):m -U lfuse:w:$(FUSE_L):m
 
 # rule for uploading firmware:
-flash: main.hex
-	$(AVRDUDE) -U flash:w:main.hex:i
+flash_isp: main.hex
+	$(AVRDUDE_ISP) -U flash:w:main.hex:i
+
+flash_dw: main.hex
+	$(AVRDUDE_DW) -U flash:w:main.hex:i
+
 
 # rule for deleting dependent files (those which can be built by Make):
 clean:

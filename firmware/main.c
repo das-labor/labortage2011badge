@@ -122,7 +122,10 @@ usbMsgLen_t usbFunctionSetup(uchar data[8])
 			uni_buffer.w16[0] = rq->wValue.word;
 			uni_buffer.w16[1] = rq->wLength.word;
 			return USB_NO_MSG;
-
+		case CUSTOM_RQ_READ_FLASH:
+			uni_buffer.w16[0] = rq->wValue.word;
+			uni_buffer.w16[1] = rq->wLength.word;
+			return USB_NO_MSG;
 
 		}
     }
@@ -171,6 +174,19 @@ uchar usbFunctionWrite(uchar *data, uchar len)
 		}
 	default:
 		return 1;
+	}
+	return 0;
+}
+uchar usbFunctionRead(uchar *data, uchar len){
+	uchar ret=len;
+	switch(current_command){
+	case CUSTOM_RQ_READ_FLASH:
+		while(len--){
+			*data++ = pgm_read_byte((uni_buffer.w16[0])++);
+		}
+		return ret;
+	default:
+		break;
 	}
 	return 0;
 }

@@ -22,9 +22,9 @@ EXE_SUFFIX =
 #USBLIBS = -L/usr/local/lib -lusb
 #EXE_SUFFIX = .exe
 
-NAME = set-led
+NAME = badge-tool
 
-OBJECTS = opendevice.o hexdump.o $(NAME).o
+OBJECTS = opendevice.o hexdump.o main.o
 
 CC		= gcc
 CFLAGS	= $(CPPFLAGS) $(USBFLAGS) -O -g -Wall

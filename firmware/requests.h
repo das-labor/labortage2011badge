@@ -24,7 +24,7 @@
 #define CUSTOM_RQ_GET_ADC     8
 #define CUSTOM_RQ_READ_MEM     0x10
 #define CUSTOM_RQ_WRITE_MEM    0x11
-#define CUSTOM_RQ_READ_FLASH   0x10
+#define CUSTOM_RQ_READ_FLASH   0x12
 #define CUSTOM_RQ_EXEC_SPM     0x13
 
 
