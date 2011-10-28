@@ -248,9 +248,9 @@ static void usage(char *name)
 	"    -r --read-mem <addr>:<length> ..................... read RAM\n"
 	"    -w --write-mem <addr>:<length>[:data] ............. write RAM\n"
 	"    -z --read-flash <addr>:<length> ................... read flash\n"
-	"    -x --exec-spm <addr>:<length>:<Z>:<R0R1>[:data] ... write RAM, set Z pointer, set r0:r1 and execute SPM\n"
-	"    -a --read-adc <adc> ............................... read ADC\n"
-	"    -q --reset ........................................ reset the controller"
+/*	"    -x --exec-spm <addr>:<length>:<Z>:<R0R1>[:data] ... write RAM, set Z pointer, set r0:r1 and execute SPM\n"
+	"    -a --read-adc <adc> ............................... read ADC\n" */
+	"    -q --reset ........................................ reset the controller\n"
 	;
 	fprintf(stderr, usage_str, name);
 }
