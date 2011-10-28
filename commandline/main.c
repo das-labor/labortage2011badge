@@ -221,10 +221,10 @@ void read_button(char* param){
 }
 
 void wait_for_button(char* param){
-	uint8_t v, x;
-	x = 1;
+	volatile uint8_t v=0, x=1;
 	if(param){
-		if(!strcmp(param,"off")){
+		printf("DBG: having param: %s\n", param);
+		if(!(strcmp(param,"off") && strcmp(param,"0"))){
 			x = 0;
 		}
 	}
@@ -274,7 +274,12 @@ static void usage(char *name)
 	"    -a --read-adc <adc> ............................... read ADC\n" */
 	"    -q --reset[=<delay>] .............................. reset the controller with delay in range 0..9\n"
 	"    -b --read-button .................................. read status of button\n"
-	"    -k --wait-for-button[=(on|off)] ................... wait for button press (default: on)\n"
+	"    -k --wait-for-button[=(on|off)] ................... wait for button press (default: on)\n\n"
+	" Please note:\n"
+	"   If you use optional parameters you have to use two different way to specify the parameter,\n"
+	"   depending on if you use short or long options.\n"
+	"   Short options: You have to put the parameter directly behind the option letter. Exp: -koff\n"
+	"   Long options: You have to seperate the option from the parameter with '='. Exp: --pad=0xAA\n"
 	;
 	fprintf(stderr, usage_str, name);
 }

@@ -86,13 +86,18 @@ static uint8_t current_command;
 
 
 uint8_t read_button(void){
-	uint8_t t,v;
-	t = PORTB;
+	uint8_t t,u,v=0;
+	t = DDRB;
+	u = PORTB;
+	DDRB &= ~(1<<BUTTON_PIN);
+	PORTB |= 1<<BUTTON_PIN;
 	PORTB &= ~(1<<BUTTON_PIN);
-	v = PINB;
-	PORTB = t;
+	v |= PINB;
+	DDRB |= t&(1<<BUTTON_PIN);
+	PORTB &= ~(t&(1<<BUTTON_PIN));
 	v >>= BUTTON_PIN;
 	v &= 1;
+	v ^= 1;
 	return v;
 }
 
@@ -142,6 +147,7 @@ usbMsgLen_t usbFunctionSetup(uchar data[8])
 			break;
 		case CUSTOM_RQ_READ_BUTTON:
 			uni_buffer.w8[0] = read_button();
+			usbMsgPtr = uni_buffer.w8;
 			return 1;
 		}
     }
