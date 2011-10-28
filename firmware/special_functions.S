@@ -18,6 +18,7 @@
 */
 
 #include <avr/io.h>
+#include "usbconfig.h"
 
 .global exec_spm
 /* void exec_spm(uint16_t z, uint16_t r0r1, void* dest, void* src, uint8_t len); */
@@ -53,13 +54,16 @@ spm_cmd:
 
 .global soft_reset
 soft_reset:
+	cli
 	andi r24, 0x0F
 	cpi r24, 0x0F
 	breq 1f
-	bld r24, 3
-	bst r24, 5
+	bst r24, 3
+	bld r24, 5
 	ori r24, 0x08
 	ldi r25, 0x18
+	or r25, r24
+	sbi _SFR_IO_ADDR(PORTB), USB_CFG_DMINUS_BIT
 	out _SFR_IO_ADDR(WDTCR), r25
 	out _SFR_IO_ADDR(WDTCR), r24
 1:

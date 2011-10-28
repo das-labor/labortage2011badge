@@ -54,7 +54,7 @@ void get_rgb(char* param){
 		fprintf(stderr, "ERROR: received %d bytes from device while expecting %d bytes\n", cnt, 6);
 		exit(1);
 	}
-	printf("red:   %3.3hX\ngreen: %3.3hX\nblue:  %3.3hX\n", buffer[0], buffer[1], buffer[2]);
+	printf("red:   %3.3hu\ngreen: %3.3hu\nblue:  %3.3hu\n", buffer[0], buffer[1], buffer[2]);
 }
 
 void read_mem(char* param){
@@ -209,8 +209,11 @@ void soft_reset(char* param){
 	unsigned delay=0;
 	if(param){
 		sscanf(param, "%i", &delay);
+	}else{
+		printf("DBG: no param ==> (default) delay = 0\n");
 	}
 	delay &= 0xf;
+	printf("DBG: delay = %d\n", delay);
 	usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, CUSTOM_RQ_RESET, (int)delay, 0, NULL, 0, 5000);
 }
 
@@ -239,7 +242,7 @@ static void usage(char *name)
 	"usage:\n"
     "    %s [<option>] <command> <parameter string>\n"
     "  where <option> is one of the following:\n"
-	"    -p --pad [<pad value>] ............................ pad writing data with <pad value> (default 0) to specified length\n"
+	"    -p --pad[=<pad value>] ............................ pad writing data with <pad value> (default 0) to specified length\n"
 	"    -f --file <name> .................................. use file <name> for reading or writing data\n"
 	"    --i-am-sure ....................................... do not ask safety question\n"
 	"  <command> is one of the following\n"
@@ -250,7 +253,7 @@ static void usage(char *name)
 	"    -z --read-flash <addr>:<length> ................... read flash\n"
 /*	"    -x --exec-spm <addr>:<length>:<Z>:<R0R1>[:data] ... write RAM, set Z pointer, set r0:r1 and execute SPM\n"
 	"    -a --read-adc <adc> ............................... read ADC\n" */
-	"    -q --reset ........................................ reset the controller\n"
+	"    -q --reset[=<delay>] .............................. reset the controller with delay in range 0..9\n"
 	;
 	fprintf(stderr, usage_str, name);
 }

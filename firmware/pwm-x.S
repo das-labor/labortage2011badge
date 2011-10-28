@@ -25,7 +25,7 @@
 #define GREEN_BIT 3
 #define BLUE_BIT  1
 
-reverse10:
+.macro reverse10
 	clr r23
 	ror r25
 	ror r25
@@ -46,10 +46,11 @@ reverse10:
 	ror r22
 	lsl r24
 	rol r23
-	bld r24, 7
-	bst r23, 1
+	bst r24, 7
+	bld r23, 1
 	movw r24, r22
-	ret
+/*	ret */
+.endm
 
 .comm counter, 2
 
@@ -62,7 +63,8 @@ update_pwm:
 	adiw r24, 1
 	std Z+0, r24
 	std Z+1, r25
-	rcall reverse10
+/*	rcall reverse10 */
+	reverse10
 	ldi r30, lo8(color)
 	ldi r31, hi8(color)
 check_red:

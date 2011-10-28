@@ -213,11 +213,11 @@ section at the end of this file).
  * you use obdev's free shared VID/PID pair. Be sure to read the rules in
  * USBID-License.txt!
  */
-#define USB_CFG_DEVICE_VERSION  0x00, 0x02
+#define USB_CFG_DEVICE_VERSION  0x00, 0x01
 /* Version number of the device: Minor number first, then major number.
  */
-#define USB_CFG_VENDOR_NAME     'd', 'a', 'v', 'e', '.', 'h' 
-#define USB_CFG_VENDOR_NAME_LEN 6
+#define USB_CFG_VENDOR_NAME     'd', 'a', 's', '-', 'l', 'a', 'b', 'o', 'r', '.', 'o', 'r', 'g', ' ', 's', 'u', 's', 'c', 'h', 'm', 'a', 'n', ' ', '&', ' ', 'b', 'g'
+#define USB_CFG_VENDOR_NAME_LEN 28
 /* These two values define the vendor name returned by the USB device. The name
  * must be given as a list of characters under single quotes. The characters
  * are interpreted as Unicode (UTF-16) entities.
@@ -226,8 +226,8 @@ section at the end of this file).
  * obdev's free shared VID/PID pair. See the file USBID-License.txt for
  * details.
  */
-#define USB_CFG_DEVICE_NAME     'L', 'E', 'D', 'C', 't', 'l', 'H', 'I', 'D'
-#define USB_CFG_DEVICE_NAME_LEN 9
+#define USB_CFG_DEVICE_NAME     'l', 'a', 'b', 'o', 'r', 't', 'a', 'g', 'e', '2', '0', '1', '1', ' ', 'b', 'a', 'd', 'g', 'e'
+#define USB_CFG_DEVICE_NAME_LEN 20
 /* Same as above for the device name. If you don't want a device name, undefine
  * the macros. See the file USBID-License.txt before you assign a name if you
  * use a shared VID/PID.
