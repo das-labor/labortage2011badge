@@ -63,7 +63,7 @@ void read_mem(char* param){
 	int cnt;
 	FILE* f=NULL;
 	if(fname){
-		f = fopen(fname, "b+w");
+		f = fopen(fname, "wb");
 		if(!f){
 			fprintf(stderr, "ERROR: could not open %s for writing\n", fname);
 			exit(1);
@@ -80,7 +80,7 @@ void read_mem(char* param){
 		fprintf(stderr, "ERROR: out of memory\n");
 		exit(1);
 	}
-	cnt = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, CUSTOM_RQ_READ_MEM, (int)addr, 0, (char*)buffer, length, 5000);
+	cnt = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, CUSTOM_RQ_READ_MEM, (int)((unsigned)addr), 0, (char*)buffer, length, 5000);
 	if(cnt!=length){
 		if(f)
 			fclose(f);
@@ -107,7 +107,7 @@ void write_mem(char* param){
 	FILE* f=NULL;
 
 	if(fname){
-		f = fopen(fname, "b+w");
+		f = fopen(fname, "rb");
 		if(!f){
 			fprintf(stderr, "ERROR: could not open %s for writing\n", fname);
 			exit(1);
@@ -168,7 +168,7 @@ void read_flash(char* param){
 	int cnt;
 	FILE* f=NULL;
 	if(fname){
-		f = fopen(fname, "b+w");
+		f = fopen(fname, "wb");
 		if(!f){
 			fprintf(stderr, "ERROR: could not open %s for writing\n", fname);
 			exit(1);
