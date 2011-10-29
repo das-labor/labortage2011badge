@@ -147,14 +147,18 @@ usbMsgLen_t usbFunctionSetup(uchar data[8])
 		{
 		case CUSTOM_RQ_SET_RED:
 			color.name.red = rq->wValue.word;
+			TCCR0B = 0;
 			return USB_NO_MSG;
 		case CUSTOM_RQ_SET_GREEN:
 			color.name.green = rq->wValue.word;
+			TCCR0B = 0;
 			return USB_NO_MSG;
 		case CUSTOM_RQ_SET_BLUE:
 			color.name.blue = rq->wValue.word;
+			TCCR0B = 0;
 			return USB_NO_MSG;
 		case CUSTOM_RQ_SET_RGB:
+			TCCR0B = 0;
 			return USB_NO_MSG;
 		case CUSTOM_RQ_GET_RGB:{
 			usbMsgLen_t len=6;

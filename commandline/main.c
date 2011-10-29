@@ -47,9 +47,7 @@ void fade_rgb(char* param){
 	uint16_t buffer[3] = {0, 0, 0}, fade_counter=256;
 	int cnt;
 	sscanf(param, "%hi:%hi:%hi:%hi", &(buffer[0]), &(buffer[1]), &(buffer[2]), &fade_counter);
-	printf("DBG: count: %d\n", fade_counter);
 	cnt = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT, CUSTOM_RQ_FADE_RGB, fade_counter, 0, (char*)buffer, 6, 5000);
-	printf("DBG: cnt: %d\n", cnt);
 }
 
 void get_rgb(char* param){

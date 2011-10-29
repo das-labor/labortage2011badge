@@ -25,6 +25,21 @@
 #define GREEN_BIT 3
 #define BLUE_BIT  1
 
+
+.macro reverse16
+	ldi r20, 8
+1: 	rol r24
+ 	ror r23
+ 	dec r20
+ 	brne 1b
+	ldi r20, 8
+1: 	rol r25
+ 	ror r22
+ 	dec r20
+ 	brne 1b
+ 	movw r24, r22
+.endm
+
 .macro reverse10
 	clr r23
 	lsr r25
@@ -64,7 +79,7 @@ update_pwm:
 	std Z+0, r24
 	std Z+1, r25
 /*	rcall reverse10 */
-	reverse10
+	reverse16
 	in r20, _SFR_IO_ADDR(TIFR)
 	bst r20, 4	/* if OCF0A */
 	brtc 20f
@@ -88,7 +103,7 @@ check_red:
 	ldd r23, Z+1
 	cp  r24, r22
 	cpc r25, r23
-	brge red_off
+	brsh red_off
 	cbi _SFR_IO_ADDR(PORTB), RED_BIT
 	rjmp add_red
 red_off:
@@ -106,7 +121,7 @@ check_green:
 	ldd r23, Z+3
 	cp  r24, r22
 	cpc r25, r23
-	brge green_off
+	brsh green_off
 	cbi _SFR_IO_ADDR(PORTB), GREEN_BIT
 	rjmp add_green
 green_off:
@@ -124,7 +139,7 @@ check_blue:
 	ldd r23, Z+5
 	cp  r24, r22
 	cpc r25, r23
-	brge blue_off
+	brsh blue_off
 	cbi _SFR_IO_ADDR(PORTB), BLUE_BIT
 	rjmp add_blue
 blue_off:
