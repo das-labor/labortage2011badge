@@ -40,10 +40,16 @@ usb_dev_handle *handle = NULL;
 void set_rgb(char* color){
 	uint16_t buffer[3] = {0, 0, 0};
 	sscanf(color, "%hi:%hi:%hi", &(buffer[0]), &(buffer[1]), &(buffer[2]));
-	buffer[0] &= (1<<10)-1;
-	buffer[1] &= (1<<10)-1;
-	buffer[2] &= (1<<10)-1;
 	usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT, CUSTOM_RQ_SET_RGB, 0, 0, (char*)buffer, 6, 5000);
+}
+
+void fade_rgb(char* param){
+	uint16_t buffer[3] = {0, 0, 0}, fade_counter=256;
+	int cnt;
+	sscanf(param, "%hi:%hi:%hi:%hi", &(buffer[0]), &(buffer[1]), &(buffer[2]), &fade_counter);
+	printf("DBG: count: %d\n", fade_counter);
+	cnt = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT, CUSTOM_RQ_FADE_RGB, fade_counter, 0, (char*)buffer, 6, 5000);
+	printf("DBG: cnt: %d\n", cnt);
 }
 
 void get_rgb(char* param){
@@ -251,6 +257,7 @@ static struct option long_options[] =
                   We distinguish them by their indices. */
                {"set-rgb",         required_argument, 0, 's'},
                {"get-rgb",               no_argument, 0, 'g'},
+               {"fade-rgb",        required_argument, 0, 'j'},
                {"read-mem",        required_argument, 0, 'r'},
                {"write-mem",       required_argument, 0, 'w'},
                {"read-flash",      required_argument, 0, 'z'},
@@ -278,6 +285,7 @@ static void usage(char *name)
 	"  <command> is one of the following\n"
 	"    -s --set-rgb <red>:<green>:<blue> ................. set color\n"
 	"    -g --get-rgb ...................................... read color from device and print\n"
+	"    -j --fade-rgb <rd>:<gd>:<bd>:<cnt> ................ change color by <rd>, <rg> and <rb> <cnt> times (all 0.5ms)\n"
 	"    -r --read-mem <addr>:<length> ..................... read RAM\n"
 	"    -w --write-mem <addr>:<length>[:data] ............. write RAM\n"
 	"    -z --read-flash <addr>:<length> ................... read flash\n"
@@ -323,19 +331,19 @@ int main(int argc, char **argv)
     }
 
     for(;;){
-    	c = getopt_long(argc, argv, "s:gr:z:w:x:a:f:p::q::bk::tl:",
+    	c = getopt_long(argc, argv, "s:gr:z:w:x:a:f:p::q::bk::tl:j:",
                 long_options, &option_index);
     	if(c == -1){
     		break;
     	}
 
-    	if(action_fn && strchr("sgrzwxaqbkt", c)){
+    	if(action_fn && strchr("sgrzwxaqbktj", c)){
     		/* action given while already having an action */
     		usage(argv[0]);
     		exit(1);
     	}
 
-    	if(strchr("sgrzwxaqkt", c)){
+    	if(strchr("sgrzwxaqktj", c)){
     		main_arg = optarg;
     	}
 
@@ -349,6 +357,7 @@ int main(int argc, char **argv)
     	case 'b': action_fn = read_button; break;
     	case 'k': action_fn = wait_for_button; break;
     	case 't': action_fn = read_temperature; break;
+    	case 'j': action_fn = fade_rgb; break;
     	case 'f': fname = optarg; break;
     	case 'p': pad = 0; if(optarg) pad=strtoul(optarg, NULL, 0); break;
        	case 'l': exec_loops = strtoul(optarg, NULL, 0); break;

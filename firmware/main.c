@@ -71,6 +71,18 @@ union {
 	uint16_t idx[3];
 } color;
 
+union {
+	struct {
+		uint16_t red;
+		uint16_t green;
+		uint16_t blue;
+	} name;
+	uint16_t idx[3];
+} color_delta;
+
+
+uint16_t fade_counter=0;
+
 #define UNI_BUFFER_SIZE 16
 
 static union {
@@ -106,6 +118,17 @@ void init_tmpsensor(void){
 	ADCSRA = 0x87;
 }
 
+void start_fadetimer(void){
+	/*
+	 * Prescaler = 64, OCRA = 129 ==> 0.5ms
+	 * CTC-Mode
+	 */
+	TCCR0A = 0x02; /* set CTC-Mode */
+	OCR0A = 129;
+	TCNT0 = 0;
+	TCCR0B = 0x05; /* set prescaler to 64 and start timer */
+}
+
 uint16_t read_tmpsensor(void){
 	ADCSRA |= 0x40;
 	while(ADCSRA & 0x40)
@@ -123,14 +146,14 @@ usbMsgLen_t usbFunctionSetup(uchar data[8])
     	switch(rq->bRequest)
 		{
 		case CUSTOM_RQ_SET_RED:
-			color.name.red = rq->wValue.bytes[0];
-			break;	
+			color.name.red = rq->wValue.word;
+			return USB_NO_MSG;
 		case CUSTOM_RQ_SET_GREEN:
-			color.name.green = rq->wValue.bytes[0];
-			break;	
+			color.name.green = rq->wValue.word;
+			return USB_NO_MSG;
 		case CUSTOM_RQ_SET_BLUE:
-			color.name.blue = rq->wValue.bytes[0];
-			break;	
+			color.name.blue = rq->wValue.word;
+			return USB_NO_MSG;
 		case CUSTOM_RQ_SET_RGB:
 			return USB_NO_MSG;
 		case CUSTOM_RQ_GET_RGB:{
@@ -165,6 +188,10 @@ usbMsgLen_t usbFunctionSetup(uchar data[8])
 			uni_buffer.w16[0] = read_tmpsensor();
 			usbMsgPtr = uni_buffer.w8;
 			return 2;
+		case CUSTOM_RQ_FADE_RGB:
+			uni_buffer_fill = 0;
+			fade_counter = rq->wValue.word;
+			return USB_NO_MSG;
 		}
     }
 	else
@@ -209,6 +236,17 @@ uchar usbFunctionWrite(uchar *data, uchar len)
 			memcpy(&(uni_buffer.w8[uni_buffer_fill]), data, len);
 			exec_spm(uni_buffer.w16[2], uni_buffer.w16[3], uni_buffer.ptr[0], data, len);
 			return 1;
+		}
+	case CUSTOM_RQ_FADE_RGB:
+		if(uni_buffer_fill + len > 6)
+			return 1;
+		memcpy(uni_buffer_fill + (uint8_t*)&(color_delta.idx[0]), data, len);
+		uni_buffer_fill += len;
+		if(uni_buffer_fill == 6 && fade_counter != 0){
+			start_fadetimer();
+			return 1;
+		}else{
+			return 0;
 		}
 	default:
 		return 1;

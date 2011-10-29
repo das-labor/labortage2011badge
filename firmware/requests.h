@@ -16,12 +16,13 @@
 #ifndef __REQUESTS_H_INCLUDED__
 #define __REQUESTS_H_INCLUDED__
 
-#define CUSTOM_RQ_SET_RED     3
-#define CUSTOM_RQ_SET_GREEN   4
-#define CUSTOM_RQ_SET_BLUE    5
-#define CUSTOM_RQ_SET_RGB     6
-#define CUSTOM_RQ_GET_RGB     7
-#define CUSTOM_RQ_GET_ADC     8
+#define CUSTOM_RQ_SET_RED      0x03
+#define CUSTOM_RQ_SET_GREEN    0x04
+#define CUSTOM_RQ_SET_BLUE     0x05
+#define CUSTOM_RQ_SET_RGB      0x06
+#define CUSTOM_RQ_GET_RGB      0x07
+#define CUSTOM_RQ_FADE_RGB     0x08
+
 #define CUSTOM_RQ_READ_MEM     0x10
 #define CUSTOM_RQ_WRITE_MEM    0x11
 #define CUSTOM_RQ_READ_FLASH   0x12

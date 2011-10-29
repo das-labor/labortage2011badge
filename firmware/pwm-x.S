@@ -27,23 +27,23 @@
 
 .macro reverse10
 	clr r23
+	lsr r25
 	ror r25
-	ror r25
-	ror r22
+	ror r22 ; 1
 	lsl r25
-	ror r22
+	ror r22 ; 2
 	lsl r24
-	ror r22
+	ror r22 ; 3
 	lsl r24
-	ror r22
+	ror r22 ; 4
 	lsl r24
-	ror r22
+	ror r22 ; 5
 	lsl r24
-	ror r22
+	ror r22 ; 6
 	lsl r24
-	ror r22
+	ror r22 ; 7
 	lsl r24
-	ror r22
+	ror r22 ; 8
 	lsl r24
 	rol r23
 	bst r24, 7
@@ -59,43 +59,84 @@ update_pwm:
 	ldi r30, lo8(counter)
 	ldi r31, hi8(counter)
 	ldd r24, Z+0
-	ldD r25, Z+1
+	ldd r25, Z+1
 	adiw r24, 1
 	std Z+0, r24
 	std Z+1, r25
 /*	rcall reverse10 */
 	reverse10
-	ldi r30, lo8(color)
+	in r20, _SFR_IO_ADDR(TIFR)
+	bst r20, 4	/* if OCF0A */
+	brtc 20f
+	andi r20, 0x10
+	out _SFR_IO_ADDR(TIFR), r20 /* reset OCF0A */
+;	rjmp 5f
+	lds r26, fade_counter+0
+	lds r27, fade_counter+1
+	sbiw r26, 1
+	sts fade_counter+0, r26
+	sts fade_counter+1, r27
+	brne 10f
+5:
+	out _SFR_IO_ADDR(TCCR0B), r1 /* deactivate timer */
+10:	ldi r26, lo8(color_delta)
+	ldi r27, hi8(color_delta)
+20:	ldi r30, lo8(color)
 	ldi r31, hi8(color)
 check_red:
-	ld r22, Z+
-	ld r23, Z+
+	ldd r22, Z+0
+	ldd r23, Z+1
 	cp  r24, r22
 	cpc r25, r23
 	brge red_off
 	cbi _SFR_IO_ADDR(PORTB), RED_BIT
-	rjmp check_green
+	rjmp add_red
 red_off:
 	sbi _SFR_IO_ADDR(PORTB), RED_BIT
+add_red:
+	brtc check_green
+	ld r20, X+
+	ld r21, X+
+	add r22, r20
+	adc r23, r21
+	std Z+0, r22
+	std Z+1, r23
 check_green:
-	ld r22, Z+
-	ld r23, Z+
+	ldd r22, Z+2
+	ldd r23, Z+3
 	cp  r24, r22
 	cpc r25, r23
 	brge green_off
 	cbi _SFR_IO_ADDR(PORTB), GREEN_BIT
-	rjmp check_blue
+	rjmp add_green
 green_off:
 	sbi _SFR_IO_ADDR(PORTB), GREEN_BIT
+add_green:
+	brtc check_blue
+	ld r20, X+
+	ld r21, X+
+	add r22, r20
+	adc r23, r21
+	std Z+2, r22
+	std Z+3, r23
 check_blue:
-	ld r22, Z+
-	ld r23, Z
+	ldd r22, Z+4
+	ldd r23, Z+5
 	cp  r24, r22
 	cpc r25, r23
 	brge blue_off
 	cbi _SFR_IO_ADDR(PORTB), BLUE_BIT
-	ret
+	rjmp add_blue
 blue_off:
 	sbi _SFR_IO_ADDR(PORTB), BLUE_BIT
+add_blue:
+	brtc 1f
+	ld r20, X+
+	ld r21, X+
+	add r22, r20
+	adc r23, r21
+	std Z+4, r22
+	std Z+5, r23
+1:
 	ret
 
