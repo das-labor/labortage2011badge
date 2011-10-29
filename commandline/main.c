@@ -283,7 +283,7 @@ static void usage(char *name)
 	"  <command> is one of the following\n"
 	"    -s --set-rgb <red>:<green>:<blue> ................. set color\n"
 	"    -g --get-rgb ...................................... read color from device and print\n"
-	"    -j --fade-rgb <rd>:<gd>:<bd>:<cnt> ................ change color by <rd>, <rg> and <rb> <cnt> times (all 0.5ms)\n"
+	"    -j --fade-rgb <rd>:<gd>:<bd>:<cnt> ................ change color by <rd>, <rg> and <rb> <cnt> times (all 8ms)\n"
 	"    -r --read-mem <addr>:<length> ..................... read RAM\n"
 	"    -w --write-mem <addr>:<length>[:data] ............. write RAM\n"
 	"    -z --read-flash <addr>:<length> ................... read flash\n"
