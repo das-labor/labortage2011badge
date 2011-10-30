@@ -227,7 +227,6 @@ void read_button(char* param){
 void wait_for_button(char* param){
 	volatile uint8_t v=0, x=1;
 	if(param){
-		printf("DBG: having param: %s\n", param);
 		if(!(strcmp(param,"off") && strcmp(param,"0"))){
 			x = 0;
 		}
