@@ -10,9 +10,12 @@
 DEVICE  = attiny45 #attiny45
 F_CPU   = 16500000
 FUSE_L  = 0xe1# 1110.0001
-FUSE_H  = 0x9d# 1001.1101
+FUSE_H  = 0xdd# 1101.1101
+FUSE_E  = 0xfe# 1111.1110
+FINAL_FUSE_H = 0x5d# 0101.1101
+
 #AVRDUDE = avrdude -c avr910 -P /dev/ttyUSB0 -p $(DEVICE) # edit this line for your programmer
-AVRDUDE_ISP = avrdude -c jtag2isp -P usb -p $(DEVICE) # edit this line for your programmer
+AVRDUDE_ISP = avrdude -c avr910 -P /dev/ttyUSB0 -p $(DEVICE) # edit this line for your programmer
 AVRDUDE_DW  = avrdude -c jtag2dw  -P usb -p $(DEVICE) # edit this line for your programmer
 
 CFLAGS  = -Iusbdrv -I. -DDEBUG_LEVEL=0
@@ -42,7 +45,23 @@ xprog_d: fuse flash_dw
 fuse:
 	@[ "$(FUSE_H)" != "" -a "$(FUSE_L)" != "" ] || \
 		{ echo "*** Edit Makefile and choose values for FUSE_L and FUSE_H!"; exit 1; }
-	$(AVRDUDE_ISP) -U hfuse:w:$(FUSE_H):m -U lfuse:w:$(FUSE_L):m
+	$(AVRDUDE_ISP) -U efuse:w:$(FUSE_E):m -U lfuse:w:$(FUSE_L):m -U hfuse:w:$(FUSE_H):m -U lfuse:w:$(FUSE_L):m
+
+fuse_dw:
+	@[ "$(FUSE_H)" != "" -a "$(FUSE_L)" != "" ] || \
+		{ echo "*** Edit Makefile and choose values for FUSE_L and FUSE_H!"; exit 1; }
+	$(AVRDUDE_DW) -V -U hfuse:w:$(FUSE_H):m -U lfuse:w:$(FUSE_L):m -U efuse:w:$(FUSE_E):m
+
+final_fuse:
+	@[ "$(FINAL_FUSE_H)" != "" ] || \
+		{ echo "*** Edit Makefile and choose values for FINAL_FUSE_H!"; exit 1; }
+	$(AVRDUDE_ISP) -U hfuse:w:$(FINAL_FUSE_H):m 
+
+final_fuse_dw:
+	@[ "$(FINAL_FUSE_H)" != "" ] || \
+		{ echo "*** Edit Makefile and choose values for FINAL_FUSE_H!"; exit 1; }
+	$(AVRDUDE_DW) -V -U hfuse:w:$(FINAL_FUSE_H):m 
+
 
 # rule for uploading firmware:
 flash_isp: main.hex

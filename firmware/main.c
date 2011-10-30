@@ -21,7 +21,7 @@ different port or bit, change the macros below:
 #define R_BIT            4
 #define G_BIT            3
 #define B_BIT            1
-#define BUTTON_PIN 4
+#define BUTTON_PIN 5
 
 #include <stdint.h>
 #include <string.h>
@@ -98,15 +98,8 @@ static uint8_t current_command;
 
 
 uint8_t read_button(void){
-	uint8_t t,u,v=0;
-	t = DDRB;
-	u = PORTB;
-	DDRB &= ~(1<<BUTTON_PIN);
-	PORTB |= 1<<BUTTON_PIN;
-	PORTB &= ~(1<<BUTTON_PIN);
-	v |= PINB;
-	DDRB |= t&(1<<BUTTON_PIN);
-	PORTB &= ~(t&(1<<BUTTON_PIN));
+	uint8_t v;
+	v = PINB;
 	v >>= BUTTON_PIN;
 	v &= 1;
 	v ^= 1;
@@ -325,6 +318,8 @@ int main(void)
      * That's the way we need D+ and D-. Therefore we don't need any
      * additional hardware initialization.
      */
+	DDRB &= ~(1<<BUTTON_PIN);
+	PORTB |= 1<<BUTTON_PIN;
 
     init_tmpsensor();
     usbInit();
