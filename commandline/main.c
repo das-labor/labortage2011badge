@@ -1,11 +1,9 @@
-/* Name: set-led.c
+/* Name: badge-tool
  * Project: hid-custom-rq example
- * Author: Christian Starkjohann
+ * Author: Daniel Otte
  * Creation Date: 2008-04-10
  * Tabsize: 4
- * Copyright: (c) 2008 by OBJECTIVE DEVELOPMENT Software GmbH
- * License: GNU GPL v2 (see License.txt), GNU GPL v3 or proprietary (CommercialLicense.txt)
- * This Revision: $Id: set-led.c 692 2008-11-07 15:07:40Z cs $
+ * License: GPLv3+
  */
 
 /*
@@ -18,6 +16,8 @@ See http://libusb.sourceforge.net/ or http://libusb-win32.sourceforge.net/
 respectively.
 */
 
+#define ENDIAN_SAFE
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,6 +28,10 @@ respectively.
 #include "hexdump.h"
 #include "opendevice.h" /* common code moved to separate module */
 
+#if ENDIAN_SAFE 1
+       #include <endian.h>
+#endif
+
 #include "../firmware/requests.h"   /* custom request numbers */
 #include "../firmware/usbconfig.h"  /* device's VID/PID and names */
 
@@ -37,9 +41,20 @@ int pad=-1;
 char* fname;
 usb_dev_handle *handle = NULL;
 
+#ifdef ENDIAN_SAFE
+#define CONVERT_TO(a) (a)=htole16(a)
+#define CONVERT_FROM(a) (a)=le16toh(a)
+#else
+#define CONVERT_TO(a)
+#define CONVERT_FROM(a)
+#endif
+
 void set_rgb(char* color){
 	uint16_t buffer[3] = {0, 0, 0};
 	sscanf(color, "%hi:%hi:%hi", &(buffer[0]), &(buffer[1]), &(buffer[2]));
+	CONVERT_TO(buffer[0]);
+	CONVERT_TO(buffer[1]);
+	CONVERT_TO(buffer[2]);
 	usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT, CUSTOM_RQ_SET_RGB, 0, 0, (char*)buffer, 6, 5000);
 }
 
@@ -47,6 +62,10 @@ void fade_rgb(char* param){
 	uint16_t buffer[3] = {0, 0, 0}, fade_counter=256;
 	int cnt;
 	sscanf(param, "%hi:%hi:%hi:%hi", &(buffer[0]), &(buffer[1]), &(buffer[2]), &fade_counter);
+	CONVERT_TO(buffer[0]);
+	CONVERT_TO(buffer[1]);
+	CONVERT_TO(buffer[2]);
+	CONVERT_TO(fade_counter);
 	cnt = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT, CUSTOM_RQ_FADE_RGB, fade_counter, 0, (char*)buffer, 6, 5000);
 }
 
@@ -58,6 +77,10 @@ void get_rgb(char* param){
 		fprintf(stderr, "ERROR: received %d bytes from device while expecting %d bytes\n", cnt, 6);
 		exit(1);
 	}
+	CONVERT_FROM(buffer[0]);
+	CONVERT_FROM(buffer[1]);
+	CONVERT_FROM(buffer[2]);
+
 	printf("red:   %5hu\ngreen: %5hu\nblue:  %5u\n", buffer[0], buffer[1], buffer[2]);
 }
 
@@ -85,6 +108,7 @@ void read_mem(char* param){
 		fprintf(stderr, "ERROR: out of memory\n");
 		exit(1);
 	}
+	CONVERT_TO(addr);
 	cnt = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, CUSTOM_RQ_READ_MEM, (int)((unsigned)addr), 0, (char*)buffer, length, 5000);
 	if(cnt!=length){
 		if(f)
@@ -160,6 +184,7 @@ void write_mem(char* param){
 		}
 
 	}
+	CONVERT_TO(addr);
 	cnt = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT, CUSTOM_RQ_WRITE_MEM, (int)addr, 0, (char*)buffer, length, 5000);
 	if(cnt!=length){
 		fprintf(stderr, "ERROR: device accepted ony %d bytes out of %d\n", cnt, length);
@@ -192,6 +217,7 @@ void read_flash(char* param){
 		fprintf(stderr, "ERROR: out of memory\n");
 		exit(1);
 	}
+	CONVERT_TO(addr);
 	cnt = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, CUSTOM_RQ_READ_FLASH, (int)addr, 0, (char*)buffer, length, 5000);
 	if(cnt!=length){
 		if(f)
@@ -244,6 +270,7 @@ void read_temperature(char* param){
 	uint16_t v;
 	int cnt;
 	cnt = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, CUSTOM_RQ_READ_TMPSENS, 0, 0, (char*)&v, 2, 5000);
+	CONVERT_FROM(v);
 	printf("temperature raw value: %hd 0x%hx\n", v, v);
 }
 
