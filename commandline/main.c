@@ -63,7 +63,8 @@ void get_rgb(char* param){
 
 void read_mem(char* param){
 	int length=0;
-	uint8_t *buffer, *addr;
+	uint16_t addr;
+	uint8_t *buffer;
 	int cnt;
 	FILE* f=NULL;
 	if(fname){
@@ -73,7 +74,7 @@ void read_mem(char* param){
 			exit(1);
 		}
 	}
-	sscanf(param, "%i:%i", (int*)&addr, &length);
+	sscanf(param, "%hi:%i", &addr, &length);
 	if(length<=0){
 		return;
 	}
@@ -100,13 +101,14 @@ void read_mem(char* param){
 		}
 
 	}else{
-		hexdump_block(stdout, buffer, addr, length, 8);
+		hexdump_block(stdout, buffer, (void*)((size_t)addr), length, 8);
 	}
 }
 
 void write_mem(char* param){
 	int length;
-	uint8_t *addr, *buffer, *data=NULL;
+	uint16_t addr;
+	uint8_t *buffer, *data=NULL;
 	int cnt=0;
 	FILE* f=NULL;
 
@@ -117,7 +119,7 @@ void write_mem(char* param){
 			exit(1);
 		}
 	}
-	sscanf(param, "%i:%i:%n", (int*)&addr, &length, &cnt);
+	sscanf(param, "%hi:%i:%n", &addr, &length, &cnt);
 	data += cnt;
 	if(length<=0){
 		return;
@@ -168,7 +170,8 @@ void write_mem(char* param){
 
 void read_flash(char* param){
 	int length=0;
-	uint8_t *buffer, *addr;
+	uint16_t addr;
+	uint8_t *buffer;
 	int cnt;
 	FILE* f=NULL;
 	if(fname){
@@ -178,7 +181,7 @@ void read_flash(char* param){
 			exit(1);
 		}
 	}
-	sscanf(param, "%i:%i", (int*)&addr, &length);
+	sscanf(param, "%hi:%i", &addr, &length);
 	if(length<=0){
 		return;
 	}
@@ -205,7 +208,7 @@ void read_flash(char* param){
 		}
 
 	}else{
-		hexdump_block(stdout, buffer, addr, length, 8);
+		hexdump_block(stdout, buffer, (void*)((size_t)addr), length, 8);
 	}
 }
 

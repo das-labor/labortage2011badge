@@ -54,7 +54,7 @@ void hexdump_block(FILE* stream, void* block, void* print_addr, unsigned length,
 	while(length>width){
 		memcpy(buffer, block, width);
 		if(print_addr){
-			fprintf(stream, "%8.8x ", (uint32_t)print_addr);
+			fprintf(stream, "%p ", print_addr);
 			print_addr = (uint8_t*)print_addr + width;
 		}
 		fprintf(stream, "<%4.4x>: ", index);
@@ -66,7 +66,7 @@ void hexdump_block(FILE* stream, void* block, void* print_addr, unsigned length,
 	}
 	memcpy(buffer, block, length);
 	if(print_addr){
-		fprintf(stream, "%8.8x ", (uint32_t)print_addr);
+		fprintf(stream, "%p ", print_addr);
 	}
 	fprintf(stream, "<%4.4x>: ", index);
 	int_hexdump_line_buffer(stream, buffer, width, length);
